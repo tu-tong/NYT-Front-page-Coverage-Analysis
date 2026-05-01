@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>How does the US perceive the world? A case from The New York Times</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Tra Dinh &amp; Tu Tong" />
+    <script src="libs/header-attrs-2.23/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+.title[
+# How does the US perceive the world? A case from The New York Times
+]
+.subtitle[
+## Data Seminar - Spring 2026
+]
+.author[
+### Tra Dinh &amp; Tu Tong
+]
+.institute[
+### Dickinson College
+]
+.date[
+### 2026/05/01
+]
+
+---
+
+## Motivation
+
+For over a century, U.S. news coverage has served as one of the main ways American audiences understand both foreign and domestic events. Although there has been extensive research on media bias, less attention has been given to how the frequency and framing of country coverage change over time.
+
+The main goal of this research is to identify long-term trends in political narratives in *The New York Times* and uncover hidden patterns that may be difficult to notice because of the rapid pace of article publication. The findings suggest that international representation in U.S. news involves two connected dynamics: which countries receive coverage and how those countries are framed for readers.
+
+This study contributes to media research by showing that changes in front-page narratives over time are important for understanding how *The New York Times* presents politics and global events to its audience.
+
+---
+
+# Tractable Data
+
+The data for this project was collected from the *New York Times* Archive API. 
+https://developer.nytimes.com/docs/archive-product/1/overview
+
+# Data retrieval 
+
+| Component | Description |
+|---|---|
+| Source | *New York Times* Archive API |
+| Retrieval Method | Articles collected by month and year |
+| Filter | Front-page articles only |
+| Rationale | Front-page placement signals editorial importance |
+| Processing | Cleaned and organized by date and metadata |
+
+---
+
+# Exploratory Data Analysis
+
+### Articles per Year
+![word-mentions](https://github.com/tu-tong/NYT-Front-page-Coverage-Analysis/raw/main/Initial%20Results/countries-mention.png)
+
+---
+### Top countries mentioned
+*Note: This graph counts number of words appeared, not #articles connecting to those countries.*
+
+TraDinh: thay cai visual top 5 vao dum chi voi
+![countries-mentions](https://github.com/tu-tong/NYT-Front-page-Coverage-Analysis/raw/main/Initial%20Results/countries-mention.png)
+
+---
+# Methods
+
+## 1. Filter out articles that mention chosen countries. Here is the code sample for China:
+
+```python
+china = ["china", "chinese", "beijing", 
+        "ccp", "mr. xi", "xi jinping", "hong kong"]
+china_keywords = "|".join(china)
+df['mention_china'] = df['abstract']
+                      .str.contains(china_keywords, 
+                      case=False, na=False)
+                      
+#create a separate dataset for China
+df_china = df[df['mention_china'] == True].copy() 
+```
+---
+## 2. Run BERTopic
+
+####Additional data processing
+```python
+seed = 42
+np.random.seed(seed)
+random.seed(seed)
+
+stop_words = set(stopwords.words('english')) # remove stop words
+lemmatizer = WordNetLemmatizer()
+
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r"\d+", "", text)  # remove numbers
+    text = re.sub(r"\W+", " ", text) # remove punctuation
+    words = [lemmatizer.lemmatize(w) 
+            for w in text.split() if w not in stop_words]
+    return ' '.join(words)
+
+newspaper_abstracts = df_china['abstract']
+docs_clean = [clean_text(str(doc)) for doc in newspaper_abstracts]
+```
+---
+#### Run the model
+```python
+embed_model = SentenceTransformer("all-MiniLM-L6-v2") 
+
+umap_model = umap.UMAP(n_neighbors=25, min_dist = 0.01, 
+                    metric='cosine', random_state = 42)
+
+clustering_model = hdbscan.HDBSCAN(
+    min_cluster_size=15,
+    metric='euclidean',
+    cluster_selection_method='eom',
+    min_samples=5
+)
+
+topic_model = BERTopic(
+    embedding_model=embed_model,
+    hdbscan_model=clustering_model,
+    umap_model=umap_model,
+    verbose=True
+)
+topics_model, probs = topic_model.fit_transform(docs_clean)
+```
+---
+## 3. Reduce number of topics and add topic assignment back to the data set
+
+```python
+df_china['year'] = pd.to_datetime(df_china['pub_date']).dt.year
+topic_model.reduce_topics(docs_clean, nr_topics=16)
+
+new_topics = topic_model.topics_
+new_probs = topic_model.probabilities_
+
+df_china['topic'] = new_topics
+df_china['topic_prob'] = [p.max() for p in new_probs]
+```
+---
+## 4. Visualize the result over time
+```python
+timestamps_china = df_china['year'].tolist()
+
+tot_china = topic_model.topics_over_time( 
+    docs_clean,
+    timestamps_china,
+    nr_bins=None,
+    global_tuning=True,
+    evolution_tuning=True
+)
+
+fig_china = topic_model.visualize_topics_over_time
+            (tot_china, top_n_topics=10)
+fig_china.show()
+fig_china.write_html("/content/china_topics_over_time.html")
+```
+
+---
+class: inverse, center, middle
+# Results
+*(Double-click on topic legend to separate the trend line of that topic)*
+---
+
+### Russia (7787 articles)
+
+&lt;div style="width:100%; height:360px; overflow:hidden;"&gt;
+  &lt;iframe src="russia_topics_over_time.html"
+    style="width:2000px; height:450px; border:none;
+           transform: scale(0.8);
+           transform-origin: top center;"&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+
+- Increased intelligence-focused coverage around mid-1980s, late 1990s/early 2000s, and 2016–2018. 
+- Energy-led economy: rising discussion around late 1990s and early 2000s.
+- Is seen as a tech competitor *(post-Soviet modernization, space/nuclear legacy)*.
+- Sports-focused articles rise around 2014-2018, following major Olympics wins/controversies.
+---
+### China (7548 articles)
+
+&lt;div style="width:100%; height:360px; overflow:hidden;"&gt;
+  &lt;iframe src="china_topics_over_time.html"
+    style="width:2000px; height:450px; border:none;
+           transform: scale(0.8);
+           transform-origin: top center;"&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+
+- Economic and political competitor: dominant topics cover financial markets, 
+  the economy, and U.S.-China relations.
+- Public health crises recur throughout. *SARS (2002–2004)* and the 
+  *COVID-19* peak are clearly detected.
+- Sports is a recurring theme, driven by Beijing-hosted Olympics 
+  (2008 and 2022).
+---
+
+### United Kingdom (7383 articles)
+
+&lt;div style="width:100%; height:360px; overflow:hidden;"&gt;
+  &lt;iframe src="uk_topics_over_time.html"
+    style="width:2000px; height:450px; border:none;
+           transform: scale(0.8);
+           transform-origin: top center;"&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+- Strategic partners: strong coverage of British companies, finance, 
+  and markets.
+- Arts and entertainment receive high coverage - cultural proximity instead of geopolitical significance. 
+- Other dominant topics: Royal family, Brexit
+
+---
+
+### North Korea (884 articles)
+
+&lt;div style="width:100%; height:360px; overflow:hidden;"&gt;
+  &lt;iframe src="nk_topics_over_time.html"
+    style="width:2000px; height:450px; border:none;
+           transform: scale(0.8);
+           transform-origin: top center;"&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+- Framed almost entirely as a military threat: coverage concentrates on nuclear weapons and security issues.
+- Coverage peaks around the 1994 nuclear crisis, the 2002-2006 escalation and first nuclear test, and the 2016-2018 missile tests and U.S.-North Korea diplomacy.
+
+---
+### Japan (11786 articles)
+
+&lt;div style="width:100%; height:360px; overflow:hidden;"&gt;
+  &lt;iframe src="japan_topics_over_time.html"
+    style="width:2000px; height:450px; border:none;
+           transform: scale(0.8);
+           transform-origin: top center;"&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+
+---
+### Vietnam (6793 articles)
+
+&lt;div style="width:100%; height:360px; overflow:hidden;"&gt;
+  &lt;iframe src="vietnam_topics_over_time.html"
+    style="width:2000px; height:450px; border:none;
+           transform: scale(0.8);
+           transform-origin: top center;"&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+- War in Vietnam (1980s - late 1990s)
+
+---
+# Limitations
+- Topic models capture co-occurrence, incidental mentions can dilute country-level framing.
+Example: Japan's topic about sports surfaces partly through Japanese MLB players, not geopolitical coverage.
+---
+
+# Implications for Stakeholders
+
+### Media Scholars and Journalists
+
+This project provides insight into long-term patterns of media attention and editorial priorities. It helps show how news institutions shape public awareness of global events by deciding which countries and issues receive front-page coverage.
+
+### Historians and Political Scientists
+
+The findings can help contextualize U.S. perspectives on international relations across different historical periods. The results also show how wars, diplomacy, and global power shifts influence media attention.
+
+### Policy Analysts and International Relations Researchers
+
+This project helps identify which countries have historically dominated U.S. media attention and how that visibility may align with U.S. foreign policy priorities.
+
+---
+
+# Ethical, Legal, and Social Implications
+
+This project examines how U.S. media attention toward different countries has changed over time. It also shows how major global events, such as wars, political conflicts, and economic crises, influence which countries dominate U.S. news coverage.
+
+By analyzing front-page headlines and abstracts, this study treats media coverage as a reflection of collective awareness and national priorities in the United States. However, media coverage should not be understood as an objective measure of global importance. Instead, it should be seen as a lens that shapes public perception of the world.
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
