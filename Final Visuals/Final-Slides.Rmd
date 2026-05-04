@@ -50,8 +50,8 @@ https://developer.nytimes.com/docs/archive-product/1/overview
 ### Top countries mentioned
 *Note: This graph counts number of words appeared, not #articles connecting to those countries.*
 
-TraDinh: thay cai visual top 5 vao dum chi voi
-![countries-mentions](https://github.com/tu-tong/NYT-Front-page-Coverage-Analysis/raw/main/Initial%20Results/countries-mention.png)
+
+![countries-mentions](https://raw.githubusercontent.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/main/Initial%20Results/topcountrie.png)
 
 ---
 # Methods
@@ -166,7 +166,7 @@ cat('
 ')
 ```
 
-- Increased intelligence-focused coverage around mid-1980s, late 1990s/early 2000s, and 2016–2018. 
+- Increased intelligence-focused coverage around mid-1980s, late 1990s/early 2000s, and 2016–2018.
 - Energy-led economy: rising discussion around late 1990s and early 2000s.
 - Is seen as a tech competitor *(post-Soviet modernization, space/nuclear legacy)*.
 - Sports-focused articles rise around 2014-2018, following major Olympics wins/controversies.
@@ -239,6 +239,9 @@ cat('
 </div>
 ')
 ```
+- “japan_japanese_trade_percent” is the dominant topic. Its peaks likely connect to major Japan–U.S. economic and trade events. In the 1980s and early 1990s, coverage likely relates to the 1985 Plaza Accord, U.S.–Japan trade tensions, and Japan’s late-1980s asset bubble.
+- “yankee_game_league_team” may not be directly about Japan as a country, but it likely reflects Japan’s connection to baseball. (Hideo Nomo joining MLB 1995, Ichiro Suzuki 2001) .
+- “drug_food_diabetes_disease”: Health and food-related articles where Japan is mentioned in relation to diet, medicine, disease, aging, or public health. 
 
 ---
 ### Vietnam (6793 articles)
@@ -254,11 +257,17 @@ cat('
 ')
 ```
 - War in Vietnam (1980s - late 1990s)
+- “kerry_vietnam_bush_war” 2004 U.S. presidential election, when John Kerry’s Vietnam War record became a major political issue.
 
 ---
 # Limitations
 - Topic models capture co-occurrence, incidental mentions can dilute country-level framing.
 Example: Japan's topic about sports surfaces partly through Japanese MLB players, not geopolitical coverage.
+- Data collected through web scraping across many years are not perfect, and cleaning for consistency may have excluded some records
+- The BERTopic model has not been fully tuned for each decade. So far, we have only used UMAP for dimensionality reduction and HDBSCAN for clustering, leaving room for improvements across each model (each decade). 
+- The parameters were fixed at either n_neighbors = 15 or 25 for UMAP and min_cluster_size = 15 for HDBSCAN. 
+- Some years show unusually high article counts partly because the data are more complete, not only because of political events. 
+
 ---
 
 # Implications for Stakeholders
@@ -279,8 +288,16 @@ This project helps identify which countries have historically dominated U.S. med
 
 # Ethical, Legal, and Social Implications
 
-This project examines how U.S. media attention toward different countries has changed over time. It also shows how major global events, such as wars, political conflicts, and economic crises, influence which countries dominate U.S. news coverage.
+* Examines how U.S. media attention toward different countries has changed over time.
 
-By analyzing front-page headlines and abstracts, this study treats media coverage as a reflection of collective awareness and national priorities in the United States. However, media coverage should not be understood as an objective measure of global importance. Instead, it should be seen as a lens that shapes public perception of the world.
+* Explores how major global events, such as wars, political conflicts, and economic crises, influence which countries receive the most front-page coverage.
+
+* Uses NYT front-page headlines and abstracts to understand patterns in U.S. media attention.
+
+* Treats media coverage as a reflection of collective awareness and national priorities in the United States.
+
+* Recognizes that media coverage is **not** an objective measure of global importance.
+
+* Frames media coverage as a lens that shapes how the public understands the world.
 
 
