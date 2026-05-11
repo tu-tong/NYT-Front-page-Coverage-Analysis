@@ -4,7 +4,7 @@ A case from The New York Times"
 subtitle: "Data Seminar - Spring 2026"
 author: "Tra Dinh & Tu Tong"
 institute: "Dickinson College"
-date: "2026/05/01"
+date: "2026/05/11"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -154,6 +154,9 @@ class: inverse, center, middle
 ---
 
 ### Russia (7787 articles)
+![russia-articles](https://github.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/raw/main/Final%20Visuals/russia-articles.png)
+---
+### Russia
 ```{r russia-plot, echo=FALSE, results='asis'}
 cat('
 <div style="width:100%; height:360px; overflow:hidden;">
@@ -172,6 +175,9 @@ cat('
 - Sports-focused articles rise around 2014-2018, following major Olympics wins/controversies.
 ---
 ### China (7548 articles)
+![china-articles](https://github.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/raw/main/Final%20Visuals/china-articles.png)
+---
+### China
 ```{r china-plot, echo=FALSE, results='asis'}
 cat('
 <div style="width:100%; height:360px; overflow:hidden;">
@@ -193,6 +199,9 @@ cat('
 ---
 
 ### United Kingdom (7383 articles)
+![uk-articles](https://github.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/raw/main/Final%20Visuals/uk-articles.png)
+---
+### United Kingdom
 ```{r uk-plot, echo=FALSE, results='asis'}
 cat('
 <div style="width:100%; height:360px; overflow:hidden;">
@@ -212,6 +221,9 @@ cat('
 ---
 
 ### North Korea (884 articles)
+![nk-articles](https://github.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/raw/main/Final%20Visuals/nk-articles.png)
+---
+### North Korea
 ```{r nk-plot, echo=FALSE, results='asis'}
 cat('
 <div style="width:100%; height:360px; overflow:hidden;">
@@ -228,6 +240,9 @@ cat('
 
 ---
 ### Japan (11786 articles)
+![japan-articles](https://github.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/raw/main/Final%20Visuals/japan-articles.png)
+---
+### Japan
 ```{r japan-plot, echo=FALSE, results='asis'}
 cat('
 <div style="width:100%; height:360px; overflow:hidden;">
@@ -246,6 +261,9 @@ cat('
 
 ---
 ### Vietnam (6793 articles)
+![vietnam-articles](https://github.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/raw/main/Final%20Visuals/vietnam-articles.png)
+---
+### Vietnam
 ```{r vietnam-plot, echo=FALSE, results='asis'}
 cat('
 <div style="width:100%; height:360px; overflow:hidden;">
