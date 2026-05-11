@@ -241,6 +241,7 @@ cat('
 ```
 - “japan_japanese_trade_percent” is the dominant topic. Its peaks likely connect to major Japan–U.S. economic and trade events. In the 1980s and early 1990s, coverage likely relates to the 1985 Plaza Accord, U.S.–Japan trade tensions, and Japan’s late-1980s asset bubble.
 - “yankee_game_league_team” may not be directly about Japan as a country, but it likely reflects Japan’s connection to baseball. (Hideo Nomo joining MLB 1995, Ichiro Suzuki 2001) .
+---
 - “drug_food_diabetes_disease”: Health and food-related articles where Japan is mentioned in relation to diet, medicine, disease, aging, or public health. 
 
 ---
