@@ -54,6 +54,9 @@ https://developer.nytimes.com/docs/archive-product/1/overview
 ![countries-mentions](https://raw.githubusercontent.com/tu-tong/-DATA400-NYT-Front-page-Coverage-Analysis/main/Initial%20Results/topcountrie.png)
 
 ---
+### Initial Model 
+![topic-assignment-distribution](https://github.com/tu-tong/NYT-Front-page-Coverage-Analysis/raw/main/Initial%20Results/main-topic-distribution.png)
+---
 # Methods
 
 ## 1. Filter out articles that mention chosen countries. Here is the code sample for China:
